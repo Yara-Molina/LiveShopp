@@ -4,6 +4,7 @@ import com.example.liveshop.features.product.data.datasources.remote.api.Product
 import com.example.liveshop.features.product.data.datasources.remote.api.ProductWSRepository
 import com.example.liveshop.features.product.data.datasources.remote.mapper.toDomain
 import com.example.liveshop.features.product.data.datasources.remote.models.ProductRequest
+import com.example.liveshop.features.product.data.datasources.remote.models.UpdateStatusRequest
 import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.domain.entities.ProductStatus
 import com.example.liveshop.features.product.domain.repositories.ProductsRepository
@@ -37,9 +38,12 @@ class ProductRepositoryImpl @Inject constructor(
         productId: String,
         status: ProductStatus
     ) {
+        val request = UpdateStatusRequest(
+            status.toString()
+        )
         api.updateStatus(
             productId,
-            status.toString()
+            request
         )
     }
 

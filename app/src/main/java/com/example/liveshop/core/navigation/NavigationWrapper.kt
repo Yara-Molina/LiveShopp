@@ -17,7 +17,7 @@ fun NavigationWrapper() {
         }
         composable<Products> {
             val args = it.toRoute<Products>()
-            ProductScreen(listId = args.listId)
+            ProductScreen(listId = args.listId, navController = navController)
         }
     }
 }

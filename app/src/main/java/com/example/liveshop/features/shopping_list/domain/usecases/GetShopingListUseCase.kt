@@ -5,10 +5,9 @@ import com.example.liveshop.features.shopping_list.domain.repositories.ListRepos
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
-class GetListsUseCase @Inject constructor(
+class GetShopingListUseCase @Inject constructor(
     private val repository: ListRepository
 ) {
-
     operator fun invoke(): Flow<List<ShoppingList>> {
         return repository.getShoppingLists()
     }

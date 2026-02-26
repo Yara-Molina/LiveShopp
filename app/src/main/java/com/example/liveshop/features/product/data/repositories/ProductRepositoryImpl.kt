@@ -1,7 +1,7 @@
 package com.example.liveshop.features.product.data.repositories
 
 import com.example.liveshop.features.product.data.datasources.remote.api.ProductHTTPApi
-import com.example.liveshop.features.product.data.datasources.remote.api.ProductWSApi
+import com.example.liveshop.features.product.data.datasources.remote.api.ProductWSRepository
 import com.example.liveshop.features.product.data.datasources.remote.mapper.toDomain
 import com.example.liveshop.features.product.data.datasources.remote.models.ProductRequest
 import com.example.liveshop.features.product.domain.entities.Product
@@ -9,10 +9,11 @@ import com.example.liveshop.features.product.domain.entities.ProductStatus
 import com.example.liveshop.features.product.domain.repositories.ProductsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class ProductRepositoryImpl(
+class ProductRepositoryImpl @Inject constructor(
     private val api: ProductHTTPApi,
-    private val webSocket: ProductWSApi,
+    private val webSocket: ProductWSRepository,
 ) : ProductsRepository {
 
     override fun observeProducts(listId: String): Flow<List<Product>> {

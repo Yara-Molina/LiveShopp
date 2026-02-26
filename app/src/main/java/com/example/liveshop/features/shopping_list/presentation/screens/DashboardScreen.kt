@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.presentation.components.ShoppingListCard
 import com.example.liveshop.features.shopping_list.presentation.viewmodels.DashboardViewModel
 
@@ -43,6 +44,9 @@ fun DashboardScreen(
     val state = viewModel.state
     var showDialog by remember { mutableStateOf(false) }
     var newListName by remember { mutableStateOf("") }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var listToEdit by remember { mutableStateOf<ShoppingList?>(null) }
+    var editedName by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -74,18 +78,24 @@ fun DashboardScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(state.lists) { list ->
+                items(
+                    items = state.lists,
+                    key = { it.id }
+                ) { list ->
                     ShoppingListCard(
                         list = list,
                         onDelete = { viewModel.removeList(list.id) },
-                        onEdit = { /* Aquí abrirías otro modal para editar */ }
+                        onEdit = {
+                            listToEdit = list
+                            editedName = list.name
+                            showEditDialog = true
+                        }
                     )
                 }
             }
         }
     }
 
-    // Modal para nueva lista
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -113,6 +123,39 @@ fun DashboardScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog && listToEdit != null) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Editar nombre de la lista") },
+            text = {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text("Nuevo nombre") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+
+                        viewModel.renameList(listToEdit!!.id, editedName)
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
+                ) {
+                    Text("Guardar cambios")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
                     Text("Cancelar")
                 }
             }

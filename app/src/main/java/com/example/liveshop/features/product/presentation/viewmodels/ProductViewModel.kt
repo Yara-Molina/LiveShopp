@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.domain.entities.ProductStatus
 import com.example.liveshop.features.product.domain.repositories.ProductsRepository
+import com.example.liveshop.features.product.presentation.screens.ProductUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +15,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class ProductUiState(
-    val products: List<Product> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
@@ -41,7 +37,7 @@ class ProductViewModel @Inject constructor(
         productsJob = viewModelScope.launch {
             repository.observeProducts(listId).collect { productList ->
                 // SOLUCIÓN: Comparamos Enum con Enum directamente
-                val visibleProducts = productList.filter { it.status != ProductStatus.DELETED }
+                val visibleProducts = productList
                 _uiState.update {
                     it.copy(products = visibleProducts, isLoading = false)
                 }
@@ -73,24 +69,17 @@ class ProductViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Pasamos el Enum directamente al repositorio
-                repository.updateStatus(productId, ProductStatus.DELETED)
+                repository.deleteProduct(productId)
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "No se pudo eliminar") }
             }
         }
     }
 
-    fun toggleProductBought(product: Product) {
+    fun updateProductStatus(productId: String, status: ProductStatus) {
         viewModelScope.launch {
             try {
-                // SOLUCIÓN: Comparamos Enum con Enum directamente
-                val newStatus = if (product.status == ProductStatus.PENDING) {
-                    ProductStatus.BOUGHT
-                } else {
-                    ProductStatus.PENDING
-                }
-
-                repository.updateStatus(product.id, newStatus)
+                repository.updateStatus(productId, status)
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Error al actualizar estado") }
             }

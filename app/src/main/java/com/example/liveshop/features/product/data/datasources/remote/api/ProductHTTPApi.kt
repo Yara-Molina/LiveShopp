@@ -2,6 +2,7 @@ package com.example.liveshop.features.product.data.datasources.remote.api
 
 import com.example.liveshop.features.product.data.datasources.remote.models.ProductRequest
 import com.example.liveshop.features.product.data.datasources.remote.models.ProductResponse
+import com.example.liveshop.features.product.data.datasources.remote.models.UpdateStatusRequest
 import retrofit2.http.DELETE
 import retrofit2.http.PATCH
 import retrofit2.http.Body
@@ -25,7 +26,7 @@ interface ProductHTTPApi {
     @PATCH("products/{productId}/status")
     suspend fun updateStatus(
         @Path("productId") productId: String,
-        @Body status: String
+        @Body status: UpdateStatusRequest
     ): ProductResponse
 
     @DELETE("products/{productId}")

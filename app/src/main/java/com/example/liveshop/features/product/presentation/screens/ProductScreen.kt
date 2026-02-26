@@ -9,8 +9,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -22,10 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.liveshop.core.navigation.Dashboard
 import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.presentation.components.AddProductDialog
 import com.example.liveshop.features.product.presentation.components.ProductCard
+import com.example.liveshop.features.product.presentation.components.ProductList
 import com.example.liveshop.features.product.presentation.viewmodels.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +38,7 @@ import com.example.liveshop.features.product.presentation.viewmodels.ProductView
 fun ProductScreen(
     viewModel: ProductViewModel = hiltViewModel(),
     listId: String,
+    navController: NavController
 ) {
     viewModel.setList(listId)
     val uiState by viewModel.uiState.collectAsState()
@@ -63,8 +69,17 @@ fun ProductScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "Productos") })
-        },
+            TopAppBar(
+                title = { Text(text = "Productos") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate(Dashboard) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar"
+                        )
+                    }
+                }
+            )        },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 editingProduct = null // Resetear para que sea creación
@@ -90,7 +105,9 @@ fun ProductScreen(
                                 editingProduct = product
                                 showDialog = true
                             },
-                            onToggleStatus = { viewModel.toggleProductBought(product) }
+                            onStatusChange = { newStatus ->
+                                viewModel.updateProductStatus(product.id, newStatus)
+                            }
                         )
                     }
                 }

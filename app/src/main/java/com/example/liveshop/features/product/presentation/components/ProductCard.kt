@@ -23,6 +23,10 @@ import androidx.compose.ui.unit.dp
 import com.example.liveshop.features.product.domain.entities.Product
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.FilterChip
 import androidx.compose.ui.text.style.TextDecoration // Para tachar el texto
 import com.example.liveshop.features.product.domain.entities.ProductStatus // Importa tus estatus
 
@@ -31,58 +35,69 @@ fun ProductCard(
     product: Product,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
-    onToggleStatus: () -> Unit
+    onStatusChange: (ProductStatus) -> Unit
 ) {
 
-    val isBought = product.status == ProductStatus.BOUGHT
+    val containerColor = when (product.status) {
+        ProductStatus.NOT_FOUND -> Color(0xFFFFCDD2)   // rojo claro
+        ProductStatus.PENDING -> Color(0xFFFFE0B2)     // naranja claro
+        ProductStatus.BOUGHT -> Color(0xFFC8E6C9)      // verde claro
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable { onToggleStatus() },
-        colors = CardDefaults.cardColors(
-
-            containerColor = if (isBought) Color(0xFFF5F5F5) else Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isBought) 0.dp else 2.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+        Column(modifier = Modifier.padding(16.dp)) {
 
-                    textDecoration = if (isBought) TextDecoration.LineThrough else TextDecoration.None,
-                    color = if (isBought) Color.Gray else Color.Unspecified
-                )
-                Text(
-                    text = "Cantidad: ${product.quantity}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Cantidad: ${product.quantity}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = null)
+                }
+
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                }
             }
 
-            // Solo mostrar botones de edición si NO está comprado (opcional)
-            if (!isBought) {
-                Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color(0xFF7C3AED))
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFFF4D4D))
-                    }
-                }
-            } else {
-                // Si está comprado, mostramos el icono de eliminar por si acaso
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.LightGray)
-                }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                FilterChip(
+                    selected = product.status == ProductStatus.PENDING,
+                    onClick = { onStatusChange(ProductStatus.PENDING) },
+                    label = { Text("Pendiente") }
+                )
+
+                FilterChip(
+                    selected = product.status == ProductStatus.BOUGHT,
+                    onClick = { onStatusChange(ProductStatus.BOUGHT) },
+                    label = { Text("Comprado") }
+                )
+
+                FilterChip(
+                    selected = product.status == ProductStatus.NOT_FOUND,
+                    onClick = { onStatusChange(ProductStatus.NOT_FOUND) },
+                    label = { Text("No encontrado") }
+                )
             }
         }
     }

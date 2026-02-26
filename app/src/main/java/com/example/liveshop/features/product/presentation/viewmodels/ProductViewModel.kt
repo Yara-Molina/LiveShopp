@@ -11,7 +11,8 @@ import com.example.liveshop.features.product.domain.usecases.UpdateProduct
 import com.example.liveshop.features.product.domain.usecases.UpdateStatus
 import com.example.liveshop.features.product.presentation.screens.ProductUIState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +33,7 @@ class ProductViewModel @Inject constructor(
 
     private val listId = MutableStateFlow<String?>(null)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<ProductUIState> =
         listId
             .filterNotNull()

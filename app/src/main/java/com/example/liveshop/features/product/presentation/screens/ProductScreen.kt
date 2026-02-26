@@ -1,5 +1,6 @@
 package com.example.liveshop.features.product.presentation.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,37 +21,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.presentation.components.AddProductDialog
 import com.example.liveshop.features.product.presentation.components.ProductList
 import com.example.liveshop.features.product.presentation.viewmodels.ProductViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductScreen(
     viewModel: ProductViewModel = hiltViewModel(),
     listId: String,
 ) {
+    Log.d("PRODUCT_FLOW", "ProductScreen received listId: $listId")
     viewModel.setList(listId)
     val uiState by viewModel.uiState.collectAsState()
-
-    ProductScreen(uiState = uiState, onAddButtonClick = { product ->
-        viewModel.createProduct(product)
-    })
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProductScreen(
-    uiState: ProductUIState,
-    onAddButtonClick: (Product) -> Unit
-) {
     var showDialog by remember { mutableStateOf(false) }
+
+    Log.d("PRODUCT_FLOW", "ProductScreen recomposing. isLoading: ${uiState.isLoading}, products: ${uiState.products.size}")
 
     if (showDialog) {
         AddProductDialog(
-            listId = uiState.listId,
+            listId = listId, // Use listId from arguments, not from uiState
             onConfirm = {
-                onAddButtonClick(it)
+                Log.d("PRODUCT_FLOW", "Creating product: $it")
+                viewModel.createProduct(it)
                 showDialog = false
             },
             onDismiss = { showDialog = false }
@@ -66,8 +59,8 @@ fun ProductScreen(
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add new product")
             }
         }
-    ) {
-        Box(modifier = Modifier.padding(it)) {
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {

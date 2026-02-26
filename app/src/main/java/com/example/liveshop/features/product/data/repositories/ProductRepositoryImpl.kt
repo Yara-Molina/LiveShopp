@@ -24,12 +24,12 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createProduct(product: Product): Product {
-        val product = ProductRequest(
+        val created = ProductRequest(
             product.list_id,
             product.name,
             product.quantity
         )
-        val response = api.createProduct(product)
+        val response = api.createProduct(created)
         return response.toDomain()
     }
 

@@ -1,5 +1,6 @@
 package com.example.liveshop.features.shopping_list.presentation.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,6 +39,7 @@ import com.example.liveshop.core.navigation.Products
 import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.presentation.components.ShoppingListCard
 import com.example.liveshop.features.shopping_list.presentation.viewmodels.DashboardViewModel
+import java.util.UUID
 
 @Composable
 fun DashboardScreen(
@@ -98,6 +100,13 @@ fun DashboardScreen(
                             showEditDialog = true
                         },
                         onClick = {
+                            Log.d("UUID_CHECK", "Navigating with listId: ${list.id}")
+                            try {
+                                UUID.fromString(list.id)
+                                Log.d("UUID_CHECK", "list.id is a valid UUID")
+                            } catch (e: IllegalArgumentException) {
+                                Log.e("UUID_CHECK", "list.id is NOT a valid UUID")
+                            }
                             navController.navigate(Products(list.id))
                         }
                     )
@@ -122,7 +131,16 @@ fun DashboardScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.addList(newListName)
+                        viewModel.addList(newListName) { listId ->
+                            Log.d("UUID_CHECK", "Navigating with new listId: $listId")
+                            try {
+                                UUID.fromString(listId)
+                                Log.d("UUID_CHECK", "new listId is a valid UUID")
+                            } catch (e: IllegalArgumentException) {
+                                Log.e("UUID_CHECK", "new listId is NOT a valid UUID")
+                            }
+                            navController.navigate(Products(listId))
+                        }
                         newListName = ""
                         showDialog = false
                     },

@@ -14,9 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.liveshop.features.product.domain.entities.Product
-import com.example.liveshop.features.product.domain.entities.ProductStatus
-import java.time.Instant
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,12 +47,12 @@ fun AddProductDialog(
             Button(
                 onClick = {
                     val product = Product(
-                        id = UUID.randomUUID().toString(),
-                        list_id = listId,
+                        id = "", // Backend will generate this
+                        list_id = listId, // This is the crucial part
                         name = name,
                         quantity = quantity.toIntOrNull() ?: 1,
-                        status = ProductStatus.PENDING.name,
-                        created_at = Instant.now().toString()
+                        status = "", // Backend will set this
+                        created_at = "" // Backend will set this
                     )
                     onConfirm(product)
                 }

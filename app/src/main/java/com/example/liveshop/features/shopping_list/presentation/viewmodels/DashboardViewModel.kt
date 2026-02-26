@@ -43,14 +43,15 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun addList(name: String) {
+    fun addList(name: String, navigate: (String) -> Unit) {
         if (name.isBlank()) return
         viewModelScope.launch {
             try {
                 // We can generate a temporary id for the sake of the example
                 val newList = ShoppingList(id = "", name = name, created_at = "")
-                createListUseCase(newList)
+                val createdList = createListUseCase(newList)
                 observeLists() // Refresh the list
+                navigate(createdList.id)
             } catch (e: Exception) {
                 state = state.copy(error = "Error al crear")
             }

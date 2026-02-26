@@ -4,10 +4,10 @@ import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.domain.repositories.ListRepository
 import jakarta.inject.Inject
 
-class GetListsUseCase @Inject constructor(
+class UpdateListUseCase @Inject constructor(
     private val repository: ListRepository
 ) {
-    suspend operator fun invoke(): List<ShoppingList> {
-        return repository.get_lists()
+    suspend operator fun invoke(id: String, list: ShoppingList): ShoppingList {
+        return repository.update_List(id, list)
     }
 }

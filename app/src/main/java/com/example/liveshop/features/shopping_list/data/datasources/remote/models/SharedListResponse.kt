@@ -1,8 +1,7 @@
 package com.example.liveshop.features.shopping_list.data.datasources.remote.models
 
-data class ShoppingListDto(
+data class SharedListResponse(
     val id: String,
     val name: String,
-    val description: String?,
-    val created_at: String
+    val created_at: String? = null
 )

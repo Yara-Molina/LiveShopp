@@ -1,4 +1,4 @@
-package com.example.liveshop.ui.theme
+package com.example.liveshop.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

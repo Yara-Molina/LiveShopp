@@ -1,91 +1,99 @@
 package com.example.liveshop.features.product.presentation.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.domain.entities.ProductStatus
-import com.example.liveshop.features.product.domain.usecases.CreateProduct
-import com.example.liveshop.features.product.domain.usecases.DeleteProduct
-import com.example.liveshop.features.product.domain.usecases.ObserveProducts
-import com.example.liveshop.features.product.domain.usecases.UpdateProduct
-import com.example.liveshop.features.product.domain.usecases.UpdateStatus
-import com.example.liveshop.features.product.presentation.screens.ProductUIState
+import com.example.liveshop.features.product.domain.repositories.ProductsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class ProductUiState(
+    val products: List<Product> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
-    private val observeProductsUC: ObserveProducts,
-    private val createUC: CreateProduct,
-    private val updateStatusUC: UpdateStatus,
-    private val updateProductUC: UpdateProduct,
-    private val deleteUC: DeleteProduct
+    private val repository: ProductsRepository
 ) : ViewModel() {
 
-    private val listId = MutableStateFlow<String?>(null)
+    private val _uiState = MutableStateFlow(ProductUiState())
+    val uiState: StateFlow<ProductUiState> = _uiState.asStateFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<ProductUIState> =
-        listId
-            .filterNotNull()
-            .flatMapLatest { id ->
-                Log.d("PRODUCT_FLOW", "flatMapLatest triggered for listId: $id")
-                observeProductsUC(id).map { products ->
-                    Log.d("PRODUCT_FLOW", "New product list received: ${products.size} items. Setting isLoading to false.")
-                    ProductUIState(
-                        listId = id,
-                        isLoading = false,
-                        products = products
-                    )
+    private var productsJob: Job? = null
+    private var currentListId: String? = null
+
+    fun setList(listId: String) {
+        if (currentListId == listId) return
+        currentListId = listId
+
+        productsJob?.cancel()
+        _uiState.update { it.copy(isLoading = true) }
+
+        productsJob = viewModelScope.launch {
+            repository.observeProducts(listId).collect { productList ->
+                // SOLUCIÓN: Comparamos Enum con Enum directamente
+                val visibleProducts = productList.filter { it.status != ProductStatus.DELETED }
+                _uiState.update {
+                    it.copy(products = visibleProducts, isLoading = false)
                 }
             }
-            .catch { e ->
-                Log.e("PRODUCT_FLOW", "Error collecting products", e)
-            }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                ProductUIState(isLoading = true)
-            )
-
-    fun setList(id: String) {
-        Log.d("PRODUCT_FLOW", "ProductViewModel setList with id: $id")
-        listId.value = id
-    }
-
-    fun createProduct(product: Product) {
-        Log.d("PRODUCT_FLOW", "ProductViewModel createProduct with product: $product")
-        viewModelScope.launch {
-            createUC(product)
         }
     }
 
-    fun updateStatus(productId: String, status: ProductStatus) {
+    fun createProduct(product: Product) {
         viewModelScope.launch {
-            updateStatusUC(productId, status)
+            try {
+                repository.createProduct(product)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Error al crear producto") }
+            }
         }
     }
 
     fun updateProduct(productId: String, product: Product) {
         viewModelScope.launch {
-            updateProductUC(productId, product)
+            try {
+                repository.updateProduct(productId, product)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Error al actualizar") }
+            }
         }
     }
 
     fun deleteProduct(productId: String) {
         viewModelScope.launch {
-            deleteUC(productId)
+            try {
+                // Pasamos el Enum directamente al repositorio
+                repository.updateStatus(productId, ProductStatus.DELETED)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "No se pudo eliminar") }
+            }
+        }
+    }
+
+    fun toggleProductBought(product: Product) {
+        viewModelScope.launch {
+            try {
+                // SOLUCIÓN: Comparamos Enum con Enum directamente
+                val newStatus = if (product.status == ProductStatus.PENDING) {
+                    ProductStatus.BOUGHT
+                } else {
+                    ProductStatus.PENDING
+                }
+
+                repository.updateStatus(product.id, newStatus)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Error al actualizar estado") }
+            }
         }
     }
 }

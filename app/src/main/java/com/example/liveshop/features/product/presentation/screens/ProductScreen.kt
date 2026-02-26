@@ -2,7 +2,9 @@ package com.example.liveshop.features.product.presentation.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
@@ -21,7 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.presentation.components.AddProductDialog
+import com.example.liveshop.features.product.presentation.components.ProductCard
 import com.example.liveshop.features.product.presentation.components.ProductList
 import com.example.liveshop.features.product.presentation.viewmodels.ProductViewModel
 
@@ -31,31 +35,42 @@ fun ProductScreen(
     viewModel: ProductViewModel = hiltViewModel(),
     listId: String,
 ) {
-    Log.d("PRODUCT_FLOW", "ProductScreen received listId: $listId")
     viewModel.setList(listId)
     val uiState by viewModel.uiState.collectAsState()
+
     var showDialog by remember { mutableStateOf(false) }
 
-    Log.d("PRODUCT_FLOW", "ProductScreen recomposing. isLoading: ${uiState.isLoading}, products: ${uiState.products.size}")
+    var editingProduct by remember { mutableStateOf<Product?>(null) }
 
     if (showDialog) {
         AddProductDialog(
             listId = listId,
-            onConfirm = {
-                Log.d("PRODUCT_FLOW", "Creating product: $it")
-                viewModel.createProduct(it)
+            initialProduct = editingProduct,
+            onConfirm = { product ->
+                if (editingProduct == null) {
+                    viewModel.createProduct(product)
+                } else {
+                    viewModel.updateProduct(editingProduct!!.id, product)
+                }
                 showDialog = false
+                editingProduct = null
             },
-            onDismiss = { showDialog = false }
+            onDismiss = {
+                showDialog = false
+                editingProduct = null
+            }
         )
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "Products") })
+            TopAppBar(title = { Text(text = "Productos") })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) {
+            FloatingActionButton(onClick = {
+                editingProduct = null // Resetear para que sea creación
+                showDialog = true
+            }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add new product")
             }
         }
@@ -64,8 +79,24 @@ fun ProductScreen(
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                ProductList(products = uiState.products)
+                // Reemplazamos ProductList por un LazyColumn directo para usar ProductCard
+                androidx.compose.foundation.lazy.LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(uiState.products) { product ->
+                        ProductCard(
+                            product = product,
+                            onDelete = { viewModel.deleteProduct(product.id) },
+                            onEdit = {
+                                editingProduct = product
+                                showDialog = true
+                            },
+                            onToggleStatus = { viewModel.toggleProductBought(product) }
+                        )
+                    }
+                }
             }
         }
     }
 }
+

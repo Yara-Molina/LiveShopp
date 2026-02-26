@@ -14,20 +14,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.liveshop.features.product.domain.entities.Product
+import com.example.liveshop.features.product.domain.entities.ProductStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductDialog(
     listId: String,
+    initialProduct: Product? = null,
     onConfirm: (Product) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf("1") }
+    var name by remember { mutableStateOf(initialProduct?.name ?: "") }
+    var quantity by remember { mutableStateOf(initialProduct?.quantity?.toString() ?: "1") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Add new product") },
+        title = { Text(text = if (initialProduct == null) "Add new product" else "Edit product") },
         text = {
             Column {
                 TextField(
@@ -46,18 +48,22 @@ fun AddProductDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val product = Product(
-                        id = "", // Backend will generate this
-                        list_id = listId, // This is the crucial part
-                        name = name,
-                        quantity = quantity.toIntOrNull() ?: 1,
-                        status = "", // Backend will set this
-                        created_at = "" // Backend will set this
-                    )
-                    onConfirm(product)
+                    // Solo procedemos si el nombre no está vacío
+                    if (name.isNotBlank()) {
+                        val product = Product(
+                            id = initialProduct?.id ?: "",
+                            list_id = listId,
+                            name = name,
+                            quantity = quantity.toIntOrNull() ?: 1,
+                            // CORRECCIÓN: Usamos el Enum directamente
+                            status = initialProduct?.status ?: ProductStatus.PENDING,
+                            created_at = initialProduct?.created_at ?: ""
+                        )
+                        onConfirm(product)
+                    }
                 }
             ) {
-                Text("Add")
+                Text(if (initialProduct == null) "Add" else "Update")
             }
         },
         dismissButton = {

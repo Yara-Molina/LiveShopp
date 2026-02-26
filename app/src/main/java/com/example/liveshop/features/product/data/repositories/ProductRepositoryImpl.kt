@@ -42,6 +42,16 @@ class ProductRepositoryImpl(
         )
     }
 
+    override suspend fun updateProduct(productId: String, product: Product): Product {
+        val product = ProductRequest(
+            product.list_id,
+            product.name,
+            product.quantity
+        )
+        val response = api.updateProduct(productId, product)
+        return response.toDomain()
+    }
+
     override suspend fun deleteProduct(productId: String) {
         api.deleteProduct(productId)
     }

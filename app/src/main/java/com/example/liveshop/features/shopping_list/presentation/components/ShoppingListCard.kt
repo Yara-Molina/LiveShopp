@@ -1,5 +1,6 @@
 package com.example.liveshop.features.shopping_list.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,10 +27,11 @@ import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 fun ShoppingListCard(
     list: ShoppingList,
     onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
@@ -45,7 +47,7 @@ fun ShoppingListCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Creada: ${list.created_at ?: "Recientemente"}",
+                    text = "Creada: ${if (list.created_at.isNullOrBlank()) "Recientemente" else list.created_at}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )

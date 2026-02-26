@@ -1,7 +1,6 @@
 package com.example.liveshop.features.product.data.di
 
 
-import com.example.liveshop.core.di.ProductsRetrofit
 import com.example.liveshop.features.product.data.datasources.remote.api.ProductHTTPApi
 import dagger.Module
 import dagger.Provides
@@ -15,7 +14,7 @@ import javax.inject.Singleton
 object ProductNetworkModule {
     @Provides
     @Singleton
-    fun provideProductApi(@ProductsRetrofit retrofit: Retrofit): ProductHTTPApi {
+    fun provideProductApi(retrofit: Retrofit): ProductHTTPApi {
         return retrofit.create(ProductHTTPApi::class.java)
     }
 }

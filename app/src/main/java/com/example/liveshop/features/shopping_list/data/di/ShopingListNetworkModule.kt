@@ -1,7 +1,7 @@
 package com.example.liveshop.features.shopping_list.data.di
 
-import com.example.liveshop.core.di.ProductsRetrofit
 import com.example.liveshop.features.product.data.datasources.remote.api.ProductHTTPApi
+import com.example.liveshop.features.shopping_list.data.datasources.remote.api.SharedListApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ import javax.inject.Singleton
 object ShopingListNetworkModule {
     @Provides
     @Singleton
-    fun provideProductApi(@ProductsRetrofit retrofit: Retrofit): ProductHTTPApi {
-        return retrofit.create(ProductHTTPApi::class.java)
+    fun provideListApi(retrofit: Retrofit): SharedListApi {
+        return retrofit.create(SharedListApi::class.java)
     }
 }

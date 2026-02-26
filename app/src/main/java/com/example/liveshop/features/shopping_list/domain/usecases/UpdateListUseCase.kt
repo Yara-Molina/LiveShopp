@@ -7,7 +7,7 @@ import jakarta.inject.Inject
 class UpdateListUseCase @Inject constructor(
     private val repository: ListRepository
 ) {
-    suspend operator fun invoke(id: String, name: String): ShoppingList {
-        return repository.update_List(id, name)
+    suspend operator fun invoke(id: String, list: ShoppingList): ShoppingList {
+        return repository.update_List(id, list)
     }
 }

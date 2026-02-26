@@ -2,12 +2,12 @@ package com.example.liveshop.features.shopping_list.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
@@ -32,13 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.liveshop.core.navigation.Products
 import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.presentation.components.ShoppingListCard
 import com.example.liveshop.features.shopping_list.presentation.viewmodels.DashboardViewModel
 
 @Composable
 fun DashboardScreen(
+    navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
@@ -53,14 +56,16 @@ fun DashboardScreen(
             Text(
                 "Mis Listas",
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(16.dp).padding(top = 24.dp),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .padding(top = 24.dp),
                 fontWeight = FontWeight.Bold
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showDialog = true },
-                containerColor = Color(0xFF7C3AED), // El morado de tu captura
+                containerColor = Color(0xFF7C3AED),
                 contentColor = Color.White
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar Lista")
@@ -68,7 +73,9 @@ fun DashboardScreen(
         },
         floatingActionButtonPosition = FabPosition.End
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)) {
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
@@ -89,6 +96,9 @@ fun DashboardScreen(
                             listToEdit = list
                             editedName = list.name
                             showEditDialog = true
+                        },
+                        onClick = {
+                            navController.navigate(Products(list.id))
                         }
                     )
                 }
@@ -129,34 +139,51 @@ fun DashboardScreen(
         )
     }
 
-    if (showEditDialog && listToEdit != null) {
+    if (showEditDialog) {
+        listToEdit?.let { list ->
+            AlertDialog(
+                onDismissRequest = { showEditDialog = false },
+                title = { Text("Editar nombre de la lista") },
+                text = {
+                    OutlinedTextField(
+                        value = editedName,
+                        onValueChange = { editedName = it },
+                        label = { Text("Nuevo nombre") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.renameList(list.id, editedName)
+                            showEditDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
+                    ) {
+                        Text("Guardar cambios")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditDialog = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+    }
+
+    state.error?.let { error ->
         AlertDialog(
-            onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar nombre de la lista") },
-            text = {
-                OutlinedTextField(
-                    value = editedName,
-                    onValueChange = { editedName = it },
-                    label = { Text("Nuevo nombre") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
+            onDismissRequest = { viewModel.clearError() },
+            title = { Text("Error") },
+            text = { Text(error) },
             confirmButton = {
                 Button(
-                    onClick = {
-
-                        viewModel.renameList(listToEdit!!.id, editedName)
-                        showEditDialog = false
-                    },
+                    onClick = { viewModel.clearError() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
                 ) {
-                    Text("Guardar cambios")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) {
-                    Text("Cancelar")
+                    Text("OK")
                 }
             }
         )

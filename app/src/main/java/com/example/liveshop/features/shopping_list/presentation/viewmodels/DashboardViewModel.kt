@@ -5,25 +5,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.domain.usecases.CreateListUseCase
 import com.example.liveshop.features.shopping_list.domain.usecases.DeleteUseCase
-import com.example.liveshop.features.shopping_list.domain.usecases.GetListByIdUseCase
-import com.example.liveshop.features.shopping_list.domain.usecases.GetShopingListUseCase
+import com.example.liveshop.features.shopping_list.domain.usecases.GetListsUseCase
 import com.example.liveshop.features.shopping_list.domain.usecases.UpdateListUseCase
 import com.example.liveshop.features.shopping_list.presentation.screens.DashboardUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val getShoppingListsUseCase: GetShopingListUseCase,
     private val createListUseCase: CreateListUseCase,
-    private val deleteListUseCase: DeleteUseCase,
+    private val deleteUseCase: DeleteUseCase,
     private val updateListUseCase: UpdateListUseCase,
-    private val getListByIdUseCase: GetListByIdUseCase
+    private val getListsUseCase: GetListsUseCase
 ) : ViewModel() {
 
     var state by mutableStateOf(DashboardUiState())
@@ -36,13 +34,12 @@ class DashboardViewModel @Inject constructor(
     private fun observeLists() {
         viewModelScope.launch {
             state = state.copy(isLoading = true)
-            getShoppingListsUseCase()
-                .catch { e ->
-                    state = state.copy(isLoading = false, error = e.message)
-                }
-                .collect { lists ->
-                    state = state.copy(isLoading = false, lists = lists, error = null)
-                }
+            try {
+                val lists = getListsUseCase()
+                state = state.copy(isLoading = false, lists = lists, error = null)
+            } catch (e: Exception) {
+                state = state.copy(isLoading = false, error = e.message)
+            }
         }
     }
 
@@ -50,18 +47,26 @@ class DashboardViewModel @Inject constructor(
         if (name.isBlank()) return
         viewModelScope.launch {
             try {
-                createListUseCase(name)
+                // We can generate a temporary id for the sake of the example
+                val newList = ShoppingList(id = "", name = name, created_at = "")
+                createListUseCase(newList)
+                observeLists() // Refresh the list
             } catch (e: Exception) {
                 state = state.copy(error = "Error al crear")
             }
         }
     }
 
+    fun clearError() {
+        state = state.copy(error = null)
+    }
 
     fun renameList(id: String, newName: String) {
         viewModelScope.launch {
             try {
-                updateListUseCase(id, newName)
+                val listToUpdate = ShoppingList(id = id, name = newName, created_at = "")
+                updateListUseCase(id, listToUpdate)
+                observeLists() // Refresh the list
             } catch (e: Exception) {
                 state = state.copy(error = "Error al actualizar")
             }
@@ -71,21 +76,10 @@ class DashboardViewModel @Inject constructor(
     fun removeList(id: String) {
         viewModelScope.launch {
             try {
-                deleteListUseCase(id)
+                deleteUseCase(id)
+                observeLists() // Refresh the list
             } catch (e: Exception) {
                 state = state.copy(error = "Error al eliminar")
-            }
-        }
-    }
-
-
-    fun selectList(id: String) {
-        viewModelScope.launch {
-            try {
-                val list = getListByIdUseCase(id)
-
-            } catch (e: Exception) {
-                state = state.copy(error = "No se encontró la lista")
             }
         }
     }

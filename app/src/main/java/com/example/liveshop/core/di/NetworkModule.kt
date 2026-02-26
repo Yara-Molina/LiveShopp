@@ -22,7 +22,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @ProductsRetrofit
     fun provideApiRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .client(okHttpClient)

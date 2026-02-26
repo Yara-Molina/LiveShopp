@@ -9,4 +9,5 @@ interface ProductsRepository {
     suspend fun createProduct(product: Product): Product
     suspend fun updateStatus(productId: String, status: ProductStatus)
     suspend fun deleteProduct(productId: String)
+    suspend fun updateProduct(productId: String, product: Product): Product
 }

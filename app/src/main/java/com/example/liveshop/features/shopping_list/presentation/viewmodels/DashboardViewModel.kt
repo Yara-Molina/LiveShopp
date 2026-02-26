@@ -31,6 +31,7 @@ class DashboardViewModel @Inject constructor(
         observeLists()
     }
 
+    // DashboardViewModel.kt
     private fun observeLists() {
         viewModelScope.launch {
             state = state.copy(isLoading = true)
@@ -38,6 +39,8 @@ class DashboardViewModel @Inject constructor(
                 val lists = getListsUseCase()
                 state = state.copy(isLoading = false, lists = lists, error = null)
             } catch (e: Exception) {
+                // ESTO ES LO QUE NECESITAMOS VER EN EL LOGCAT
+                android.util.Log.e("API_ERROR", "Fallo al obtener listas: ${e.message}", e)
                 state = state.copy(isLoading = false, error = e.message)
             }
         }
@@ -47,13 +50,15 @@ class DashboardViewModel @Inject constructor(
         if (name.isBlank()) return
         viewModelScope.launch {
             try {
-                // We can generate a temporary id for the sake of the example
-                val newList = ShoppingList(id = "", name = name, created_at = "")
-                val createdList = createListUseCase(newList)
-                observeLists() // Refresh the list
+                state = state.copy(isLoading = true)
+
+                val createdList = createListUseCase(name)
+
+                observeLists()
                 navigate(createdList.id)
             } catch (e: Exception) {
-                state = state.copy(error = "Error al crear")
+                android.util.Log.e("DASHBOARD_VM", "Error en addList: ${e.message}", e)
+                state = state.copy(isLoading = false, error = "No se pudo crear la lista")
             }
         }
     }
@@ -78,7 +83,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 deleteUseCase(id)
-                observeLists() // Refresh the list
+                observeLists()
             } catch (e: Exception) {
                 state = state.copy(error = "Error al eliminar")
             }

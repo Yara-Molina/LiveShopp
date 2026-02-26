@@ -16,8 +16,10 @@ class ShoppingListRepositoryImpl @Inject constructor(
     private val api: SharedListApi
 ) : ListRepository {
 
-    override suspend fun create_List(list: ShoppingList): ShoppingList {
-        return api.createList(SharedListCreate(name = list.name)).toDomain()
+    override suspend fun create_List(name: String): ShoppingList {
+
+        val dto = SharedListCreate(name = name)
+        return api.createList(dto).toDomain()
     }
 
     override suspend fun update_List(id: String, list: ShoppingList): ShoppingList {

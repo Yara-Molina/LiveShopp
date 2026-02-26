@@ -40,7 +40,7 @@ fun ProductScreen(
 
     if (showDialog) {
         AddProductDialog(
-            listId = listId, // Use listId from arguments, not from uiState
+            listId = listId,
             onConfirm = {
                 Log.d("PRODUCT_FLOW", "Creating product: $it")
                 viewModel.createProduct(it)

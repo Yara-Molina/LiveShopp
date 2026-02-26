@@ -7,7 +7,8 @@ import jakarta.inject.Inject
 class CreateListUseCase @Inject constructor(
     private val repository: ListRepository
 ) {
-    suspend operator fun invoke(list: ShoppingList): ShoppingList {
-        return repository.create_List(list)
+
+    suspend operator fun invoke(name: String): ShoppingList {
+        return repository.create_List(name)
     }
 }

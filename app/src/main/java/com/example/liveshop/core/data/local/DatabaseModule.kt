@@ -1,16 +1,16 @@
-package com.example.liveshop.features.product.data.di
+package com.example.liveshop.core.data.local
 
 import android.content.Context
 import androidx.room.Room
-import com.example.liveshop.features.product.data.local.ProductDatabase
 import com.example.liveshop.features.product.data.local.dao.ProductDao
+import com.example.liveshop.features.shopping_list.data.local.dao.ShoppingListDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import kotlin.jvm.java
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -20,16 +20,17 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context
-    ): ProductDatabase {
+    ): AppDatabase {
         return Room.databaseBuilder(
             context,
-            ProductDatabase::class.java,
-            "liveshop_database"
+            AppDatabase::class.java,
+            "liveshop_db"
         ).build()
     }
 
     @Provides
-    fun provideProductDao(db: ProductDatabase): ProductDao {
-        return db.productDao()
-    }
+    fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
+
+    @Provides
+    fun provideShoppingListDao(db: AppDatabase): ShoppingListDao = db.shoppingListDao()
 }

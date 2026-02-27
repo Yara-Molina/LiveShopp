@@ -61,9 +61,6 @@ fun DashboardScreen(
     var listToEdit by remember { mutableStateOf<ShoppingList?>(null) }
     var editedName by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        viewModel.observeLists()
-    }
 
     Scaffold(
         topBar = {
@@ -90,7 +87,7 @@ fun DashboardScreen(
         PullToRefreshBox(
             isRefreshing = state.isLoading,
             state = pullToRefreshState,
-            onRefresh = { viewModel.observeLists() },
+            onRefresh = { viewModel.refreshFromApi() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)

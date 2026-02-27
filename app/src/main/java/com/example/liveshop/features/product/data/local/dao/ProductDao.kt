@@ -2,9 +2,10 @@ package com.example.liveshop.features.product.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Upsert
-import com.example.liveshop.features.product.data.local.entities.ProductEntity
+
 import kotlinx.coroutines.flow.Flow
 import androidx.room.Query
+import com.example.liveshop.features.product.data.local.entities.ProductEntity
 
 @Dao
 interface ProductDao {

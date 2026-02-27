@@ -6,6 +6,7 @@ import com.example.liveshop.features.product.data.datasources.remote.mapper.toDo
 import com.example.liveshop.features.product.data.datasources.remote.mapper.toEntity
 import com.example.liveshop.features.product.data.datasources.remote.models.ProductRequest
 import com.example.liveshop.features.product.data.local.dao.ProductDao
+
 import com.example.liveshop.features.product.domain.entities.Product
 import com.example.liveshop.features.product.domain.entities.ProductStatus
 import com.example.liveshop.features.product.domain.repositories.ProductsRepository
@@ -16,7 +17,7 @@ import javax.inject.Inject
 class ProductRepositoryImpl @Inject constructor(
     private val api: ProductHTTPApi,
     private val webSocket: ProductWSRepository,
-    private val productDao: ProductDao // Room
+    private val productDao: ProductDao
 ) : ProductsRepository {
 
 

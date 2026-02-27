@@ -38,14 +38,13 @@ class ProductViewModel @Inject constructor(
         if (currentListId == listId) return
         currentListId = listId
 
-        // Cancelamos procesos previos para evitar fugas de memoria o datos mezclados
+
         productsJob?.cancel()
         syncJob?.cancel()
 
         _uiState.update { it.copy(isLoading = true) }
 
-        // 1. INICIAR SINCRONIZACIÓN (WebSocket -> Room)
-        // Se lanza en un Job separado porque 'collect' en el socket es infinito
+
         syncJob = viewModelScope.launch {
             try {
                 repository.startRealtimeSync(listId)
@@ -54,7 +53,7 @@ class ProductViewModel @Inject constructor(
             }
         }
 
-        // 2. OBSERVAR FUENTE DE VERDAD (Room -> UI)
+
         productsJob = viewModelScope.launch {
             repository.observeProducts(listId).collect { productList ->
                 _uiState.update {
@@ -94,13 +93,12 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-    // UX OPTIMISTA: El repositorio actualiza Room antes de ir al servidor
+
     fun updateProductStatus(productId: String, status: ProductStatus) {
         viewModelScope.launch {
             try {
                 repository.updateStatus(productId, status)
             } catch (e: Exception) {
-                // Si el servidor falla, el error se envía por el SharedFlow
                 _errorEvents.emit("Error al sincronizar estado: ${e.message}")
             }
         }

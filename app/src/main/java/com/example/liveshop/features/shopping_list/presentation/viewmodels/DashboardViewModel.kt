@@ -31,15 +31,14 @@ class DashboardViewModel @Inject constructor(
         observeLists()
     }
 
-    // DashboardViewModel.kt
-    private fun observeLists() {
+
+    fun observeLists() {
         viewModelScope.launch {
             state = state.copy(isLoading = true)
             try {
                 val lists = getListsUseCase()
                 state = state.copy(isLoading = false, lists = lists, error = null)
             } catch (e: Exception) {
-                // ESTO ES LO QUE NECESITAMOS VER EN EL LOGCAT
                 android.util.Log.e("API_ERROR", "Fallo al obtener listas: ${e.message}", e)
                 state = state.copy(isLoading = false, error = e.message)
             }

@@ -52,8 +52,6 @@ fun ShoppingListCard(
                     color = Color.Gray
                 )
             }
-
-            // Botones de acción
             Row {
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color(0xFF7C3AED))

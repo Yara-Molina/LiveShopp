@@ -15,6 +15,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -23,7 +24,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,7 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+
 import androidx.navigation.NavController
 import com.example.liveshop.core.navigation.Products
 import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
@@ -41,17 +46,24 @@ import com.example.liveshop.features.shopping_list.presentation.components.Shopp
 import com.example.liveshop.features.shopping_list.presentation.viewmodels.DashboardViewModel
 import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
+    val pullToRefreshState = rememberPullToRefreshState()
+
     var showDialog by remember { mutableStateOf(false) }
     var newListName by remember { mutableStateOf("") }
     var showEditDialog by remember { mutableStateOf(false) }
     var listToEdit by remember { mutableStateOf<ShoppingList?>(null) }
     var editedName by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        viewModel.observeLists()
+    }
 
     Scaffold(
         topBar = {
@@ -75,11 +87,25 @@ fun DashboardScreen(
         },
         floatingActionButtonPosition = FabPosition.End
     ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)) {
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        PullToRefreshBox(
+            isRefreshing = state.isLoading,
+            state = pullToRefreshState,
+            onRefresh = { viewModel.observeLists() },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (state.lists.isEmpty() && !state.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No tienes listas aún",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                }
             }
 
             LazyColumn(
@@ -101,12 +127,6 @@ fun DashboardScreen(
                         },
                         onClick = {
                             Log.d("UUID_CHECK", "Navigating with listId: ${list.id}")
-                            try {
-                                UUID.fromString(list.id)
-                                Log.d("UUID_CHECK", "list.id is a valid UUID")
-                            } catch (e: IllegalArgumentException) {
-                                Log.e("UUID_CHECK", "list.id is NOT a valid UUID")
-                            }
                             navController.navigate(Products(list.id))
                         }
                     )
@@ -114,6 +134,8 @@ fun DashboardScreen(
             }
         }
     }
+
+
 
     if (showDialog) {
         AlertDialog(
@@ -132,13 +154,6 @@ fun DashboardScreen(
                 Button(
                     onClick = {
                         viewModel.addList(newListName) { listId ->
-                            Log.d("UUID_CHECK", "Navigating with new listId: $listId")
-                            try {
-                                UUID.fromString(listId)
-                                Log.d("UUID_CHECK", "new listId is a valid UUID")
-                            } catch (e: IllegalArgumentException) {
-                                Log.e("UUID_CHECK", "new listId is NOT a valid UUID")
-                            }
                             navController.navigate(Products(listId))
                         }
                         newListName = ""
@@ -161,7 +176,7 @@ fun DashboardScreen(
         listToEdit?.let { list ->
             AlertDialog(
                 onDismissRequest = { showEditDialog = false },
-                title = { Text("Editar nombre de la lista") },
+                title = { Text("Editar nombre") },
                 text = {
                     OutlinedTextField(
                         value = editedName,
@@ -179,7 +194,7 @@ fun DashboardScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
                     ) {
-                        Text("Guardar cambios")
+                        Text("Guardar")
                     }
                 },
                 dismissButton = {
@@ -197,10 +212,7 @@ fun DashboardScreen(
             title = { Text("Error") },
             text = { Text(error) },
             confirmButton = {
-                Button(
-                    onClick = { viewModel.clearError() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
-                ) {
+                Button(onClick = { viewModel.clearError() }) {
                     Text("OK")
                 }
             }

@@ -34,17 +34,8 @@ class ProductRepositoryImpl @Inject constructor(
         return response.toDomain()
     }
 
-    override suspend fun updateStatus(
-        productId: String,
-        status: ProductStatus
-    ) {
-        val request = UpdateStatusRequest(
-            status.toString()
-        )
-        api.updateStatus(
-            productId,
-            request
-        )
+    override suspend fun updateStatus(productId: String, status: ProductStatus) {
+        api.updateStatus(productId, status.name)
     }
 
     override suspend fun updateProduct(productId: String, product: Product): Product {

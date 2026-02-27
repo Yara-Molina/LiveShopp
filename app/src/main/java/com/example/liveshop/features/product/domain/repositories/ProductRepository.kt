@@ -8,6 +8,7 @@ interface ProductsRepository {
     fun observeProducts(listId: String): Flow<List<Product>>
     suspend fun createProduct(product: Product): Product
     suspend fun updateStatus(productId: String, status: ProductStatus)
+    suspend fun startRealtimeSync(listId: String)
     suspend fun deleteProduct(productId: String)
     suspend fun updateProduct(productId: String, product: Product): Product
 }

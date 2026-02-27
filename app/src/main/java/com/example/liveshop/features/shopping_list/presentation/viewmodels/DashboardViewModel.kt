@@ -9,6 +9,7 @@ import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.domain.usecases.CreateListUseCase
 import com.example.liveshop.features.shopping_list.domain.usecases.DeleteUseCase
 import com.example.liveshop.features.shopping_list.domain.usecases.GetListsUseCase
+import com.example.liveshop.features.shopping_list.domain.usecases.SyncListsUseCase
 import com.example.liveshop.features.shopping_list.domain.usecases.UpdateListUseCase
 import com.example.liveshop.features.shopping_list.presentation.screens.DashboardUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,8 @@ class DashboardViewModel @Inject constructor(
     private val createListUseCase: CreateListUseCase,
     private val deleteUseCase: DeleteUseCase,
     private val updateListUseCase: UpdateListUseCase,
-    private val getListsUseCase: GetListsUseCase
+    private val getListsUseCase: GetListsUseCase,
+    private val syncListsUseCase: SyncListsUseCase
 ) : ViewModel() {
 
     var state by mutableStateOf(DashboardUiState())
@@ -29,16 +31,31 @@ class DashboardViewModel @Inject constructor(
 
     init {
         observeLists()
+        refreshFromApi()
     }
 
     private fun observeLists() {
         viewModelScope.launch {
-            state = state.copy(isLoading = true)
+            getListsUseCase().collect { lists ->
+                state = state.copy(
+                    lists = lists,
+                    isLoading = false,
+                    error = null
+                )
+            }
+        }
+    }
+
+    fun refreshFromApi() {
+        viewModelScope.launch {
             try {
-                val lists = getListsUseCase()
-                state = state.copy(isLoading = false, lists = lists, error = null)
+
+                if (state.lists.isEmpty()) state = state.copy(isLoading = true)
+                syncListsUseCase() // Este llama a repository.sync_lists()
             } catch (e: Exception) {
-                state = state.copy(isLoading = false, error = e.message)
+                state = state.copy(error = "Error al sincronizar con el servidor")
+            } finally {
+                state = state.copy(isLoading = false)
             }
         }
     }
@@ -47,19 +64,13 @@ class DashboardViewModel @Inject constructor(
         if (name.isBlank()) return
         viewModelScope.launch {
             try {
-                // We can generate a temporary id for the sake of the example
-                val newList = ShoppingList(id = "", name = name, created_at = "")
-                val createdList = createListUseCase(newList)
-                observeLists() // Refresh the list
+                val createdList = createListUseCase(name)
+
                 navigate(createdList.id)
             } catch (e: Exception) {
-                state = state.copy(error = "Error al crear")
+                state = state.copy(error = "No se pudo crear la lista")
             }
         }
-    }
-
-    fun clearError() {
-        state = state.copy(error = null)
     }
 
     fun renameList(id: String, newName: String) {
@@ -67,7 +78,7 @@ class DashboardViewModel @Inject constructor(
             try {
                 val listToUpdate = ShoppingList(id = id, name = newName, created_at = "")
                 updateListUseCase(id, listToUpdate)
-                observeLists() // Refresh the list
+
             } catch (e: Exception) {
                 state = state.copy(error = "Error al actualizar")
             }
@@ -78,10 +89,13 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 deleteUseCase(id)
-                observeLists() // Refresh the list
             } catch (e: Exception) {
                 state = state.copy(error = "Error al eliminar")
             }
         }
+    }
+
+    fun clearError() {
+        state = state.copy(error = null)
     }
 }

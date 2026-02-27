@@ -1,14 +1,12 @@
 package com.example.liveshop.features.shopping_list.domain.usecases
 
-import com.example.liveshop.features.shopping_list.domain.entities.ShoppingList
 import com.example.liveshop.features.shopping_list.domain.repositories.ListRepository
 import javax.inject.Inject
 
-class CreateListUseCase @Inject constructor(
+class SyncListsUseCase @Inject constructor(
     private val repository: ListRepository
 ) {
-
-    suspend operator fun invoke(name: String): ShoppingList {
-        return repository.create_List(name)
+    suspend operator fun invoke() {
+        repository.sync_lists()
     }
 }

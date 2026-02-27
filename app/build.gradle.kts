@@ -82,6 +82,15 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.hilt.compiler)
 
+    implementation(libs.androidx.room.runtime) // Clase principal
+    implementation(libs.androidx.room.ktx)     // Soporte para Coroutines/Flow
+    ksp(libs.androidx.room.compiler)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

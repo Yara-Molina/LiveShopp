@@ -49,7 +49,7 @@ class DashboardViewModel @Inject constructor(
     fun refreshFromApi() {
         viewModelScope.launch {
             try {
-                // Solo activamos carga si la lista está vacía actualmente
+
                 if (state.lists.isEmpty()) state = state.copy(isLoading = true)
                 syncListsUseCase() // Este llama a repository.sync_lists()
             } catch (e: Exception) {
@@ -78,7 +78,7 @@ class DashboardViewModel @Inject constructor(
             try {
                 val listToUpdate = ShoppingList(id = id, name = newName, created_at = "")
                 updateListUseCase(id, listToUpdate)
-                // NO necesitas refresh, Room se encarga.
+
             } catch (e: Exception) {
                 state = state.copy(error = "Error al actualizar")
             }
@@ -89,7 +89,6 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 deleteUseCase(id)
-                // NO necesitas refresh, el borrado en Room disparará el Flow.
             } catch (e: Exception) {
                 state = state.copy(error = "Error al eliminar")
             }

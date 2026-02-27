@@ -1,5 +1,6 @@
 package com.example.liveshop.features.product.data.repositories
 
+import android.util.Log
 import com.example.liveshop.features.product.data.datasources.remote.api.ProductHTTPApi
 import com.example.liveshop.features.product.data.datasources.remote.api.ProductWSRepository
 import com.example.liveshop.features.product.data.datasources.remote.mapper.toDomain
@@ -53,7 +54,6 @@ class ProductRepositoryImpl @Inject constructor(
 
             api.updateStatus(productId, status.name)
         } catch (e: Exception) {
-            // Si falla, aquí iría el Rollback (volver al estado anterior en Room)
             throw e
         }
     }
@@ -65,9 +65,14 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteProduct(productId: String) {
-        // Borramos en servidor
-        api.deleteProduct(productId)
-        // Borramos en local para que la UI se actualice de inmediato
-        // productDao.deleteProductById(productId) // Requiere Query en el DAO
+
+        productDao.deleteProductById(productId)
+
+        try {
+
+            api.deleteProduct(productId)
+        } catch (e: Exception) {
+            Log.e("API_ERROR", "El servidor falló pero ya lo quitamos de la vista")
+        }
     }
 }
